@@ -18,7 +18,7 @@ impl From<&str> for HttpMethod {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum HttpVersion {
     V1_1,
     V2_0,
@@ -40,11 +40,15 @@ pub enum HttpReSource {
 //仅仅解析故不需要PartialEq来比较是否是相同的Http请求
 #[derive(Debug)]
 pub struct HttpRequest {
-    pub method: HttpMethod,
-    pub version: HttpVersion,
-    pub resource: HttpReSource,
-    pub head: HashMap<String, String>,
-    pub body: String,
+    // 请求行（METHOD 请求目标 HTTP/版本）
+    // 请求头（可选）
+    // 空行
+    // 请求体（可选）
+    method: HttpMethod,
+    version: HttpVersion,
+    resource: HttpReSource,
+    head: Option<HashMap<String, String>>,
+    body: Option<String>,
 }
 // 用String是因为需要长时间使用，故需要所有权
 impl From<String> for HttpRequest {
@@ -90,8 +94,8 @@ impl From<String> for HttpRequest {
             method: parsed_method,
             version: parsed_version,
             resource: parsed_resource,
-            head: parsed_head,
-            body: parsed_body,
+            head: Some(parsed_head),
+            body: Some(parsed_body),
         }
     }
 }
@@ -179,7 +183,7 @@ mod tests {
     #[test]
     fn test_parse_simple_get_request() {
         let request = HttpRequest::from(make_get_request());
-
+        let head = request.head.unwrap();
         assert_eq!(request.method, HttpMethod::Get);
         assert_eq!(request.version, HttpVersion::V1_1);
 
@@ -189,36 +193,36 @@ mod tests {
         }
 
         // 检查 headers
-        assert_eq!(request.head.get("Host"), Some(&"localhost:8080".to_string()));
-        assert_eq!(request.head.get("User-Agent"), Some(&"curl/7.64.1".to_string()));
-        assert_eq!(request.head.get("Accept"), Some(&"*/*".to_string()));
+        assert_eq!(head.get("Host"), Some(&"localhost:8080".to_string()));
+        assert_eq!(head.get("User-Agent"), Some(&"curl/7.64.1".to_string()));
+        assert_eq!(head.get("Accept"), Some(&"*/*".to_string()));
 
         // GET 请求没有 body
-        assert_eq!(request.body, "");
+        assert_eq!(request.body.unwrap(), "");
     }
 
     #[test]
     fn test_parse_post_request_with_body() {
         let request = HttpRequest::from(make_post_request());
-
+        let head = request.head.unwrap();
         assert_eq!(request.method, HttpMethod::Post);
 
         match &request.resource {
             HttpReSource::Path(path) => assert_eq!(path, "/api/users"),
         }
 
-        assert_eq!(request.head.get("Content-Type"), Some(&"application/json".to_string()));
-        assert_eq!(request.body, "{\"name\":\"tom\",\"age\":25}");
+        assert_eq!(head.get("Content-Type"), Some(&"application/json".to_string()));
+        assert_eq!(request.body.unwrap(), "{\"name\":\"tom\",\"age\":25}");
     }
 
     #[test]
     fn test_parse_request_with_empty_headers() {
         let req_str = "GET / HTTP/1.1\r\n\r\n".to_string();
         let request = HttpRequest::from(req_str);
-
+        let head = request.head.unwrap();
         assert_eq!(request.method, HttpMethod::Get);
-        assert!(request.head.is_empty());
-        assert_eq!(request.body, "");
+        assert!(head.is_empty());
+        assert_eq!(request.body.unwrap(), "");
     }
 
     #[test]
@@ -230,10 +234,10 @@ mod tests {
             .to_string();
 
         let request = HttpRequest::from(req_str);
-
+        let head = request.head.unwrap();
         // 注意：你的实现只用第一个冒号分割，后面的会保留
         assert_eq!(
-            request.head.get("Date"),
+            head.get("Date"),
             Some(&"Mon, 23 May 2022 22:38:34 GMT".to_string())
         );
     }
@@ -243,10 +247,10 @@ mod tests {
     #[test]
     fn test_parse_empty_string() {
         let request = HttpRequest::from("".to_string());
-
+        let head = request.head.unwrap();
         assert_eq!(request.method, HttpMethod::Uninitialized);
         assert_eq!(request.version, HttpVersion::Uninitialized);
-        assert!(request.head.is_empty());
+        assert!(head.is_empty());
     }
 
     #[test]
@@ -254,7 +258,7 @@ mod tests {
         let request = HttpRequest::from("   \n   \n   ".to_string());
 
         assert_eq!(request.method, HttpMethod::Uninitialized);
-        assert_eq!(request.body, "");
+        assert_eq!(request.body.unwrap(), "");
     }
 
 
@@ -277,6 +281,6 @@ mod tests {
 
         // 当前实现只会保留最后一行 "line3"
         // 因为 lines() 会跳过空行，且每次赋值覆盖 parsed_body
-        assert_eq!(request.body, "line1\nline2\nline3");
+        assert_eq!(request.body.unwrap(), "line1\nline2\nline3");
     }
 }
