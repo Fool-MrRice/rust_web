@@ -3,17 +3,19 @@ repos:
     hooks:
       - id: rustfmt
         name: rustfmt
-        entry: rustfmt --check
+        entry: cargo fmt
         language: system
         types: [ rust ]
-        pass_filenames: true
+        pass_filenames: false
+        args: [ "--" ]  # 注意空格！前面要有空格
 
       - id: clippy
         name: clippy
-        entry: cargo clippy -- -D warnings
+        entry: cargo clippy
         language: system
         pass_filenames: false
         always_run: true
+        args: [ "--fix", "--allow-dirty", "--", "-D", "warnings" ]  # 注意空格！
 
       - id: cargo-check
         name: cargo check
