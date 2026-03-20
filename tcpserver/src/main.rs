@@ -1,5 +1,5 @@
-use std::net::TcpListener;
 use std::io::{Read, Write};
+use std::net::TcpListener;
 
 fn main() {
     // 利用TcpListener使得localhost:3000被server监听
@@ -11,19 +11,20 @@ fn main() {
         println!("Connection established!");
         loop {
             // 建立缓冲
-            let mut buffer= [0; 1024];
+            let mut buffer = [0; 1024];
             // 从读取的stream中读信息到buffer中
             match stream.read(&mut buffer) {
+                Ok(0) => break,
                 Ok(_) => {
                     // 把buffer中的内容原封不动的返回给客户端
-                    stream.write(&buffer).unwrap();
+                    stream.write_all(&buffer).unwrap();
                 }
-                Ok(0)=>break,
-                Err(e)=>{println!("Error: {}", e);break;}
 
+                Err(e) => {
+                    println!("Error: {}", e);
+                    break;
+                }
             }
-
         }
     }
-
 }

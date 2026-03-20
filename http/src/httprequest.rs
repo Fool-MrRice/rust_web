@@ -138,10 +138,9 @@ fn process_req_line(line: &str) -> (HttpMethod, HttpReSource, HttpVersion) {
     (
         method.into(),
         HttpReSource::Path(resource.into()),
-        version.into()
+        version.into(),
     )
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -234,7 +233,10 @@ mod tests {
             HttpReSource::Path(path) => assert_eq!(path, "/api/users"),
         }
 
-        assert_eq!(head.get("Content-Type"), Some(&"application/json".to_string()));
+        assert_eq!(
+            head.get("Content-Type"),
+            Some(&"application/json".to_string())
+        );
         assert_eq!(request.body.unwrap(), "{\"name\":\"tom\",\"age\":25}");
     }
 
@@ -283,7 +285,6 @@ mod tests {
         assert_eq!(request.method, HttpMethod::Uninitialized);
         assert_eq!(request.body.unwrap(), "");
     }
-
 
     // ========== 多行 body 测试 ==========
 

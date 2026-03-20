@@ -2,17 +2,13 @@ use http::httprequest::HttpRequest;
 use std::io::Read;
 use std::net::TcpListener;
 
-
 pub struct Server<'a> {
     socket_addr: &'a str,
 }
 
-
 impl<'a> Server<'a> {
     pub fn new(socket_addr: &'a str) -> Self {
-        Server {
-            socket_addr: socket_addr,
-        }
+        Server { socket_addr }
     }
     pub fn run(&self) {
         // 利用TcpListener使得localhost:3000被server监听

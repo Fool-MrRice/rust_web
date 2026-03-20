@@ -18,9 +18,9 @@ pub struct HttpResponse<'a> {
 impl<'a> Default for HttpResponse<'a> {
     fn default() -> Self {
         Self {
-            version: "HTTP/1.1".into(),
-            status_code: "200".into(),
-            status_text: "OK".into(),
+            version: "HTTP/1.1",
+            status_code: "200",
+            status_text: "OK",
             head: None,
             body: None,
         }
@@ -28,25 +28,29 @@ impl<'a> Default for HttpResponse<'a> {
 }
 // new()
 impl<'a> HttpResponse<'a> {
-    pub fn new(status_code: &'a str, headers: Option<HashMap<&'a str, &'a str>>, body: Option<String>) -> HttpResponse<'a> {
+    pub fn new(
+        status_code: &'a str,
+        headers: Option<HashMap<&'a str, &'a str>>,
+        body: Option<String>,
+    ) -> HttpResponse<'a> {
         // 先声明
         let mut response: HttpResponse<'a> = HttpResponse::default();
         // 初始化
         if status_code != "200" {
-            response.status_code = status_code.into();
+            response.status_code = status_code;
         }
         response.status_text = match response.status_code {
-            "200" => "OK".into(),
-            "400" => "Bad Request".into(),
-            "404" => "Not Found".into(),
-            "500" => "Internal Server Error".into(),
-            _ => "ERROR".into()
+            "200" => "OK",
+            "400" => "Bad Request",
+            "404" => "Not Found",
+            "500" => "Internal Server Error",
+            _ => "ERROR",
         };
         response.head = match headers {
             Some(h) => Some(h),
             None => {
                 let mut h = HashMap::new();
-                h.insert("Content-Type", "text/html; charset=utf-8".into());
+                h.insert("Content-Type", "text/html; charset=utf-8");
                 Some(h)
             }
         };
@@ -57,7 +61,7 @@ impl<'a> HttpResponse<'a> {
     pub fn send_response(&self, write_stream: &mut impl Write) -> Result<()> {
         let res = self.clone();
         let response_string: String = String::from(res);
-        let _ = write!(write_stream, "{}", response_string)?;
+        write!(write_stream, "{}", response_string)?;
         Ok(())
     }
     // getter
@@ -86,7 +90,7 @@ impl<'a> HttpResponse<'a> {
     pub fn body(&self) -> String {
         match &self.body {
             Some(b) => String::from(b),
-            None => String::new()
+            None => String::new(),
         }
     }
 }
@@ -96,12 +100,15 @@ impl<'a> From<HttpResponse<'a>> for String {
         let res_clone = res.clone();
         format!(
             "{} {} {}\r\n{}Content-Length: {}\r\n\r\n{}",
-            res_clone.version(), res_clone.status_code(), res_clone.status_text(),
-            res_clone.head(), res_clone.body().len(), res_clone.body()
+            res_clone.version(),
+            res_clone.status_code(),
+            res_clone.status_text(),
+            res_clone.head(),
+            res_clone.body().len(),
+            res_clone.body()
         )
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -212,7 +219,7 @@ mod tests {
         assert!(s.starts_with("HTTP/1.1 200 OK\r\n"));
         assert!(s.contains("Content-Type:text/html; charset=utf-8"));
         assert!(s.contains("Content-Length: 0"));
-        assert!(s.ends_with("\r\n\r\n"));  // 空body也以空行结束
+        assert!(s.ends_with("\r\n\r\n")); // 空body也以空行结束
     }
 
     #[test]
@@ -295,11 +302,11 @@ mod tests {
 
     #[test]
     fn test_unicode_body() {
-        let body = "你好，世界！🦀".to_string();  // 含Rust螃蟹emoji
+        let body = "你好，世界！🦀".to_string(); // 含Rust螃蟹emoji
         let res = HttpResponse::new("200", None, Some(body.clone()));
 
         // 注意：len() 返回字节数，不是字符数
-        let byte_len = body.len();  // UTF-8 编码长度
+        let byte_len = body.len(); // UTF-8 编码长度
         let s: String = res.into();
 
         assert!(s.contains(&format!("Content-Length: {}", byte_len)));
