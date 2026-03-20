@@ -50,6 +50,29 @@ pub struct HttpRequest {
     head: Option<HashMap<String, String>>,
     body: Option<String>,
 }
+
+impl HttpRequest {
+    pub fn method(&self) -> &HttpMethod {
+        &self.method
+    }
+
+    pub fn version(&self) -> &HttpVersion {
+        &self.version
+    }
+
+    pub fn resource(&self) -> &HttpReSource {
+        &self.resource
+    }
+
+    pub fn head(&self) -> &Option<HashMap<String, String>> {
+        &self.head
+    }
+
+    pub fn body(&self) -> &Option<String> {
+        &self.body
+    }
+}
+
 // 用String是因为需要长时间使用，故需要所有权
 impl From<String> for HttpRequest {
     fn from(req: String) -> Self {

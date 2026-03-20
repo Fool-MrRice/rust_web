@@ -1,6 +1,6 @@
 use anyhow::Result;
 use std::collections::HashMap;
-use std::fmt::Write;
+use std::io::Write;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct HttpResponse<'a> {
